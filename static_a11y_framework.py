@@ -37,8 +37,8 @@ class StaticAccessibilityAnalyzer:
         self.contrast_analyzer = ColorContrastAnalyzer()
         
         # Constants
-        self.MIN_TOUCH_TARGET_DP = 48
-        self.MIN_TEXT_SIZE_SP = 12
+        self.MIN_TOUCH_TARGET_DP = 44
+        self.MIN_TEXT_SIZE_SP = 12 # to be used for text scaling; sp - scalable pixels
 
     def _decode_screenshot(self, base64_string: str) -> np.ndarray:
         """Convert base64 screenshot to OpenCV image"""
@@ -171,6 +171,51 @@ class StaticAccessibilityAnalyzer:
                                 fix_suggestion=f"Use suggested colors: {issue.suggested_colors}",
                                 bounds=element.bounds
                             ))
+
+    def _estimate_heading_level(self, element: UIElement) -> int:
+    """
+    Estimate the heading level of a UI element based on its class name or text size.
+    
+    Args:
+        element: The UIElement to estimate the heading level for.
+    
+    Returns:
+        An integer representing the estimated heading level.
+    """
+    # Check if the class name contains heading indicators
+    if element.class_name:
+        if 'h1' in element.class_name.lower():
+            return 1
+        elif 'h2' in element.class_name.lower():
+            return 2
+        elif 'h3' in element.class_name.lower():
+            return 3
+        elif 'h4' in element.class_name.lower():
+            return 4
+        elif 'h5' in element.class_name.lower():
+            return 5
+        elif 'h6' in element.class_name.lower():
+            return 6
+
+    # Fallback: Estimate based on text size if available
+    # Assuming we have a way to determine text size, e.g., from element attributes
+    if element.text and len(element.text) > 0:
+        # Placeholder logic for text size estimation
+        # This would require additional data about text size, which is not present in the current model
+        text_size = len(element.text)  # Simplified assumption
+        if text_size > 20:
+            return 1
+        elif text_size > 16:
+            return 2
+        elif text_size > 12:
+            return 3
+        elif text_size > 8:
+            return 4
+        else:
+            return 5
+
+    # Default to level 6 if no other indicators are found
+    return 6
 
     def analyze_heading_hierarchy(self) -> None:
         """Analyze heading structure and hierarchy"""
