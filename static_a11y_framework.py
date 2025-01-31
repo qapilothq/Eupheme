@@ -29,7 +29,8 @@ class StaticAccessibilityAnalyzer:
         self.image_name = image_name  # Store the image name
         
         # Parse inputs
-        self.screenshot = self._decode_screenshot(base64_screenshot)
+        self.base64_screenshot = base64_screenshot
+        self.screenshot = self._decode_screenshot()
         self.layout_tree = ET.fromstring(layout_xml)
         self.ui_elements = self._parse_layout()
         
@@ -40,11 +41,11 @@ class StaticAccessibilityAnalyzer:
         self.MIN_TOUCH_TARGET_DP = 44
         self.MIN_TEXT_SIZE_SP = 12 # to be used for text scaling; sp - scalable pixels
 
-    def _decode_screenshot(self, base64_string: str) -> np.ndarray:
+    def _decode_screenshot(self) -> np.ndarray:
         """Convert base64 screenshot to OpenCV image"""
         try:
             # Decode base64 to image
-            img_data = base64.b64decode(base64_string)
+            img_data = base64.b64decode(self.base64_screenshot)
             img = Image.open(io.BytesIO(img_data))
             
             # Convert to OpenCV format
@@ -53,6 +54,20 @@ class StaticAccessibilityAnalyzer:
             self.logger.error(f"Failed to decode screenshot: {str(e)}")
             raise
 
+    def get_image_dimensions(self):
+        try:
+            # Load the image from the binary data
+            img_data = base64.b64decode(self.base64_screenshot)
+            image = Image.open(io.BytesIO(img_data))
+
+            # Get the dimensions of the image
+            width, height = image.size
+
+            return [width, height]
+        except Exception as e:
+            self.logger.error(f"Failed to decode screenshot: {str(e)}")
+            return [0,0]
+    
     def _parse_layout(self) -> List[UIElement]:
         """Parse XML layout into UIElement objects"""
         elements = []
@@ -173,49 +188,49 @@ class StaticAccessibilityAnalyzer:
                             ))
 
     def _estimate_heading_level(self, element: UIElement) -> int:
-    """
-    Estimate the heading level of a UI element based on its class name or text size.
-    
-    Args:
-        element: The UIElement to estimate the heading level for.
-    
-    Returns:
-        An integer representing the estimated heading level.
-    """
-    # Check if the class name contains heading indicators
-    if element.class_name:
-        if 'h1' in element.class_name.lower():
-            return 1
-        elif 'h2' in element.class_name.lower():
-            return 2
-        elif 'h3' in element.class_name.lower():
-            return 3
-        elif 'h4' in element.class_name.lower():
-            return 4
-        elif 'h5' in element.class_name.lower():
-            return 5
-        elif 'h6' in element.class_name.lower():
-            return 6
+        """
+        Estimate the heading level of a UI element based on its class name or text size.
+        
+        Args:
+            element: The UIElement to estimate the heading level for.
+        
+        Returns:
+            An integer representing the estimated heading level.
+        """
+        # Check if the class name contains heading indicators
+        if element.class_name:
+            if 'h1' in element.class_name.lower():
+                return 1
+            elif 'h2' in element.class_name.lower():
+                return 2
+            elif 'h3' in element.class_name.lower():
+                return 3
+            elif 'h4' in element.class_name.lower():
+                return 4
+            elif 'h5' in element.class_name.lower():
+                return 5
+            elif 'h6' in element.class_name.lower():
+                return 6
 
-    # Fallback: Estimate based on text size if available
-    # Assuming we have a way to determine text size, e.g., from element attributes
-    if element.text and len(element.text) > 0:
-        # Placeholder logic for text size estimation
-        # This would require additional data about text size, which is not present in the current model
-        text_size = len(element.text)  # Simplified assumption
-        if text_size > 20:
-            return 1
-        elif text_size > 16:
-            return 2
-        elif text_size > 12:
-            return 3
-        elif text_size > 8:
-            return 4
-        else:
-            return 5
+        # Fallback: Estimate based on text size if available
+        # Assuming we have a way to determine text size, e.g., from element attributes
+        if element.text and len(element.text) > 0:
+            # Placeholder logic for text size estimation
+            # This would require additional data about text size, which is not present in the current model
+            text_size = len(element.text)  # Simplified assumption
+            if text_size > 20:
+                return 1
+            elif text_size > 16:
+                return 2
+            elif text_size > 12:
+                return 3
+            elif text_size > 8:
+                return 4
+            else:
+                return 5
 
-    # Default to level 6 if no other indicators are found
-    return 6
+        # Default to level 6 if no other indicators are found
+        return 6
 
     def analyze_heading_hierarchy(self) -> None:
         """Analyze heading structure and hierarchy"""
@@ -318,6 +333,7 @@ class StaticAccessibilityAnalyzer:
 
         return {
             'timestamp': datetime.now().isoformat(),
+            'image_dimensions': self.get_image_dimensions(),
             'total_issues': len(self.issues),
             'issues_by_category': dict(issues_by_category),
             'summary': {
