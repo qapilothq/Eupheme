@@ -354,7 +354,7 @@ class StaticAccessibilityAnalyzer:
             self.analyze_text_contrast()
             self.analyze_heading_hierarchy()
             
-            self.mark_issues()
+            # self.mark_issues()
             return self.generate_report()
             
         except Exception as e:
