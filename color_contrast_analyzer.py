@@ -131,7 +131,7 @@ class ColorContrastAnalyzer:
         
         return regions
 
-    def analyze_contrast(self, image: np.ndarray) -> List[ContrastIssue]:
+    def analyze_contrast(self, image: np.ndarray, detect_text_regions=False) -> List[ContrastIssue]:
         """
         Analyze color contrast in the image and identify accessibility issues
         
@@ -146,8 +146,13 @@ class ColorContrastAnalyzer:
         # Convert to Lab color space for better color difference analysis
         lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
         
-        # Detect potential text regions
-        text_regions = self._detect_text_regions(image)
+        if detect_text_regions:
+            # Detect potential text regions
+            text_regions = self._detect_text_regions(image)
+        else:
+            # Use the whole image as a single region
+            text_regions = [(slice(0, image.shape[0]), slice(0, image.shape[1]))]
+        
         
         for region in text_regions:
             # Find dominant colors in the region
