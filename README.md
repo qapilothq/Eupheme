@@ -3,17 +3,21 @@
 ## Overview
 Eupheme is a FastAPI-based application designed to analyze mobile screenshots and XML of the pagesource to detect accessibility issues in mobile apps. It provides detailed issue list along with suggestions to fix them.
 
-**Current Status**: This version is supporting Static analysis only. Improvements in Static analysis and Dynamic Accessibility Analysis coming soon.
+**Current Status**: This version is supporting Static analysis on Android only. Support for iOS, Improvements in Static analysis and Dynamic Accessibility Analysis coming soon.
 
 ## Installation
-1. Clone the repository:
+1. **Clone the repository**:
 
    ```bash
    git clone https://github.com/qapilotio/Eupheme.git
    cd Eupheme
    ```
+2. **Set up a virtual environment**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
 
-2. Install dependencies:
+3. **Install dependencies**:
 
    ```bash
    pip install -r requirements.txt
@@ -21,12 +25,12 @@ Eupheme is a FastAPI-based application designed to analyze mobile screenshots an
 
 ## Quick Start
 
-1. Start the application:
+1. **Start the application**:
 
    ```bash
    uvicorn main:app --host 0.0.0.0 --port 8000
    ```
-2. Access the interactive API documentation:
+2. **Access the interactive API documentation**:
    - OpenAPI UI: `http://localhost:8000/docs`
    - ReDoc UI: `http://localhost:8000/redoc`
 
@@ -36,7 +40,12 @@ Eupheme is a FastAPI-based application designed to analyze mobile screenshots an
 
 - Supports image and XML input files as URLs
 - Analyzes for accessibility issues
-- Returns the list of issues categorywise with descriptions and suggestions to fix
+- Returns the list of issues category wise with descriptions and suggestions to fix.
+  Categories supported - 
+  1. Content Description
+  2. Touch Target Size
+  3. Color Contrast
+  4. Heading Hierarchy
 
 #### Request Body
 
@@ -46,8 +55,6 @@ Eupheme is a FastAPI-based application designed to analyze mobile screenshots an
   "xml_url": "string"     // Required: File path or URL
 }
 ```
-
-**Note**: Either `image` or `xml` must be provided. When both are present, XML analysis takes precedence.
 
 #### Response Format
 
@@ -202,6 +209,8 @@ Eupheme is a FastAPI-based application designed to analyze mobile screenshots an
   }
 }
 ```
+
+**Note : If a certain category is not present in the API response, it is safe to assume there's no issue of that category**
 
 ### GET /health
 
