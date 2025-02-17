@@ -90,7 +90,7 @@ class StaticAccessibilityAnalyzer:
             elements.append(UIElement(
                 element_type=node.tag,
                 bounds=bounds,
-                content_desc=node.get('content-desc'),
+                content_desc=node.get('content-desc') or node.get('text'),
                 text=node.get('text'),
                 clickable=node.get('clickable') == 'true',
                 focused=node.get('focused') == 'true',
@@ -331,6 +331,7 @@ class StaticAccessibilityAnalyzer:
                 'element_info': issue.element_info,
                 'bounds': issue.bounds
             })
+        print("Generated Report")
 
         return {
             'timestamp': datetime.now().isoformat(),
@@ -350,15 +351,21 @@ class StaticAccessibilityAnalyzer:
     def run_analysis(self) -> dict[str, Any]:
         """Run all accessibility analyses"""
         try:
+            print("Starting analyze_content_descriptions")
             self.analyze_content_descriptions()
+            print("Starting analyze_touch_targets")
             self.analyze_touch_targets()
+            print("Starting analyze_text_contrast")
             self.analyze_text_contrast()
+            print("Starting analyze_heading_hierarchy")
             self.analyze_heading_hierarchy()
             
-            # self.mark_issues()
+            #self.mark_issues()
+            print("Generating report")
             return self.generate_report()
             
         except Exception as e:
+            print("Exception: ",e)
             self.logger.error(f"Analysis failed: {str(e)}")
             raise
 
