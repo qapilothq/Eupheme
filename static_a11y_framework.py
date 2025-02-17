@@ -6,7 +6,7 @@ import cv2
 import os
 from PIL import Image
 from dataclasses import dataclass
-from typing import List, Dict, Tuple, Optional
+from typing import Any, List, Dict, Tuple, Optional
 from datetime import datetime
 import json
 import logging
@@ -237,7 +237,7 @@ class StaticAccessibilityAnalyzer:
         headings = []
         
         for element in self.ui_elements:
-            if 'Heading' in element.class_name or 'Title' in element.class_name:
+            if element.class_name and ('Heading' in element.class_name or 'Title' in element.class_name):
                 headings.append(element)
         
         # Check heading levels
@@ -251,8 +251,8 @@ class StaticAccessibilityAnalyzer:
                     category="Heading Hierarchy",
                     severity="Medium",
                     element_info={
-                        'type': element.element_type,
-                        'text': element.text,
+                        'type': heading.element_type,
+                        'text': heading.text,
                         'current_level': estimated_level,
                         'expected_level': current_level + 1
                     },
@@ -263,7 +263,7 @@ class StaticAccessibilityAnalyzer:
             
             current_level = estimated_level
 
-    def mark_issues_on_image(self, image: np.ndarray, issues: List[AccessibilityIssue], color: Tuple[int, int, int], output_name: str) -> None:
+    def mark_issues_on_image(self, image: np.ndarray[Any], issues: List[AccessibilityIssue], color: Tuple[int, int, int], output_name: str) -> None:
         """
         Mark issues on a copy of the input image with rectangles.
 
@@ -278,8 +278,9 @@ class StaticAccessibilityAnalyzer:
 
         # Draw rectangles around the elements with issues
         for issue in issues:
-            left, top, right, bottom = issue.bounds
-            cv2.rectangle(marked_image, (left, top), (right, bottom), color, 4)
+            if issue.bounds is not None:
+                left, top, right, bottom = issue.bounds
+                cv2.rectangle(marked_image, (left, top), (right, bottom), color, 4)
 
         # Ensure the output directory exists
         os.makedirs('./marked-output', exist_ok=True)
@@ -319,7 +320,7 @@ class StaticAccessibilityAnalyzer:
     # Example usage
     # Assuming `screenshot` is the decoded image and `analyzer.issues` contains the list of issues
     # process_issues(screenshot, analyzer.issues, "input_image_name")
-    def generate_report(self) -> Dict:
+    def generate_report(self) -> dict[str, Any]:
         """Generate comprehensive accessibility report"""
         issues_by_category = defaultdict(list)
         for issue in self.issues:
@@ -346,7 +347,7 @@ class StaticAccessibilityAnalyzer:
             }
         }
 
-    def run_analysis(self) -> Dict:
+    def run_analysis(self) -> dict[str, Any]:
         """Run all accessibility analyses"""
         try:
             self.analyze_content_descriptions()
@@ -361,19 +362,19 @@ class StaticAccessibilityAnalyzer:
             self.logger.error(f"Analysis failed: {str(e)}")
             raise
 
-def main(base64_screenshot: str, layout_xml: str) -> Dict:
-    """
-    Main entry point for static accessibility analysis
+# def main(base64_screenshot: str, layout_xml: str) -> dict[str, Any]:
+#     """
+#     Main entry point for static accessibility analysis
     
-    Args:
-        base64_screenshot: Base64 encoded screenshot
-        layout_xml: XML layout string
+#     Args:
+#         base64_screenshot: Base64 encoded screenshot
+#         layout_xml: XML layout string
     
-    Returns:
-        Dict containing accessibility analysis report
-    """
-    analyzer = StaticAccessibilityAnalyzer(base64_screenshot, layout_xml)
-    return analyzer.run_analysis()
+#     Returns:
+#         Dict containing accessibility analysis report
+#     """
+#     analyzer = StaticAccessibilityAnalyzer(base64_screenshot, layout_xml)
+#     return analyzer.run_analysis()
 
 # Example usage:
 # if __name__ == "__main__":
